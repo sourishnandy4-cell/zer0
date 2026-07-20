@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zerO — Energy Reimagined</title>
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Webapp Icon / Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
+    <!-- Chart.js for real-time telemetry plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- ============================================================
+    LOADING SCREEN
+    ============================================================ -->
+    <div id="loader" role="status" aria-label="Loading">
+        <canvas id="loader-canvas"></canvas>
+
+        <div class="loader-content">
+            <div class="energy-orb">
+                <div class="orb-core"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+            </div>
+
+            <div class="loader-brand">zer<span>O</span></div>
+            <div class="loader-tagline">Energy reimagined</div>
+
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-label" id="progress-label">0%</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    MAIN CONTENT
+    ============================================================ -->
+    <div id="main-content">
+
+        <!-- Organic background blobs -->
+        <div class="bg-shapes" aria-hidden="true">
+            <div class="blob"></div>
+            <div class="blob"></div>
+            <div class="blob"></div>
+        </div>
+
+        <div class="app-container">
+
+            <!-- Header / Nav bar -->
+            <header>
+                <div class="logo-section">
+                    <a href="#" class="nav-logo logo-icon" onclick="showHome(); return false;">
+                        zer<span>O</span><span class="dot"></span>
+                    </a>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <!-- Back to Home link visible only when on dashboard -->
+                    <button class="btn btn-outline" id="navBackBtn" style="display: none; width: auto; padding: 0.4rem 1rem; font-size: 0.8rem; border-radius: 60px; height: 32px;" onclick="showHome()">
+                        <i data-lucide="home" style="width: 14px; height: 14px;"></i> Home
+                    </button>
+                    
+                    <div class="system-badge" id="systemStatus" style="display: none;">
+                        Relay Guard: Active
+                    </div>
+                    
+                    <!-- Theme Toggle Button -->
+                    <button class="btn btn-outline theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle Theme" style="width: 36px; height: 36px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="moon" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    
+                    <!-- 3-Dots Menu Button -->
+                    <button class="btn btn-outline" id="menuToggleBtn" style="width: 36px; height: 36px; border-radius: 50%; padding: 0;" onclick="toggleDrawer()" aria-label="Menu Options">
+                        <i data-lucide="more-vertical" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ===== HOME LANDING SCREEN SECTION ===== -->
+            <section id="home-screen" style="display: block;">
+                <div class="hero">
+                    <div class="hero-text">
+                        <div class="hero-badge">
+                            <span class="pulse-dot"></span>
+                            Powering a cleaner future
+                        </div>
+
+                        <h1>
+                            Energy that<br />
+                            <span class="highlight">feels human</span>
+                        </h1>
+
+                        <p>
+                            zerO reimagines how we connect with energy — not as a commodity,
+                            but as a living, human experience. Sustainable, intelligent, and
+                            beautifully simple.
+                        </p>
+
+                        <div class="hero-actions">
+                            <button class="btn-primary" onclick="showDashboard()">
+                                Start with zerO
+                                <i data-lucide="arrow-right"></i>
+                            </button>
+                            <button class="btn-secondary" onclick="openStoryModal()">
+                                Watch story
+                                <i data-lucide="play"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual">
+                        <div class="illustration">
+                            <div class="floating-orb"></div>
+                            <div class="floating-orb"></div>
+                            <div class="floating-orb"></div>
+                            <div class="floating-orb"></div>
+
+                            <!-- Decorative wave -->
+                            <div class="wave-line">
+                                <svg viewBox="0 0 400 40" preserveAspectRatio="none">
+                                    <path d="M0,20 Q50,0 100,20 T200,20 T300,20 T400,20" stroke="#d46a3a" stroke-width="2" fill="none" opacity="0.3"/>
+                                    <path d="M0,28 Q50,8 100,28 T200,28 T300,28 T400,28" stroke="#5a9e9f" stroke-width="2" fill="none" opacity="0.2"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Intro Header -->
+                <div class="features-intro-card">
+                    <div class="illustration-sm">
+                        <div class="floating-orb"></div>
+                        <div class="floating-orb"></div>
+                        <div class="floating-orb"></div>
+                    </div>
+                    <h2>Designed for people, not machines</h2>
+                    <p>Every detail crafted to feel warm, intuitive, and alive.</p>
+                </div>
+            </section>
+
+            <!-- ===== REAL APPLICATION DASHBOARD SCREEN ===== -->
+            <section id="dashboard-screen" style="display: none;">
+                <!-- Live Leak Alert Banner (Dynamic) -->
+                <div class="leak-alert-banner" id="leakAlert" style="display: none;">
+                    <div class="alert-icon">!</div>
+                    <div class="alert-text">
+                        <div class="alert-title">PHANTOM LOAD DETECTED</div>
+                        <div class="alert-desc" id="leakAlertDesc">The selected device is turned "off" but is still draining power from the grid! Click "PATCH LEAK" to open the smart relay.</div>
+                    </div>
+                    <button class="btn btn-cyan" style="width: auto; padding: 0.5rem 1.25rem; font-size: 0.85rem;" onclick="sendAction('patch')">
+                        <i data-lucide="shield-check"></i> Patch Leak
+                    </button>
+                </div>
+
+                <!-- Dashboard Grid Layout -->
+                <div class="dashboard-grid">
+                    
+                    <!-- Left Side: Devices & Actions -->
+                    <div class="panel-left">
+                        
+                        <!-- Device Selector -->
+                        <div class="glass-card">
+                            <h3 class="section-title">
+                                <span>Select Appliance</span>
+                                <span style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: normal; font-family: var(--font-body); font-style: normal;">Simulated Node</span>
+                            </h3>
+                            <div class="device-list" id="deviceList">
+                                <!-- Filled dynamically by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Action Controller -->
+                        <div class="glass-card">
+                            <h3 class="section-title">Appliance Controls</h3>
+                            <div class="control-actions">
+                                <button class="btn btn-outline" id="btnTogglePower" onclick="togglePower()">
+                                    <i data-lucide="power"></i> <span id="togglePowerText">Turn Device OFF</span>
+                                </button>
+                                
+                                <button class="btn btn-cyan" id="btnPatch" onclick="sendAction('patch')" style="display: none;">
+                                    <i data-lucide="shield-check"></i> Cut Power (PATCH Relay)
+                                </button>
+                                
+                                <div id="patchedInfo" style="display: none; text-align: center; margin-top: 0.5rem;">
+                                    <div style="font-size: 0.8rem; color: var(--color-secondary); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                        <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> ZER0 Smart Relay Opened
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--color-text-light); margin-top: 0.15rem;">Power flow cut to 0.0W completely.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Developer Cheat Info for Demo -->
+                        <div class="glass-card" style="padding: 1.15rem; background: rgba(212, 106, 58, 0.03); border-color: rgba(212, 106, 58, 0.1);">
+                            <div style="display: flex; gap: 0.5rem; align-items: center; color: var(--color-primary-dark); margin-bottom: 0.5rem;">
+                                <i data-lucide="help-circle" style="width: 16px; height: 16px;"></i>
+                                <span style="font-family: var(--font-body); font-size: 0.85rem; font-weight: 700;">Hackathon Demo Flow:</span>
+                            </div>
+                            <ul style="font-size: 0.75rem; color: var(--color-text-light); padding-left: 1.1rem; line-height: 1.45;">
+                                <li>Select <strong>Electric Room Heater</strong> (shows ACTIVE ~1500W).</li>
+                                <li>Click <strong>Turn Device OFF</strong> (reveals a hidden 45W standby/phantom leak).</li>
+                                <li>Show the red alert & drop in inverter minutes.</li>
+                                <li>Click <strong>Cut Power (PATCH Relay)</strong>. ZER0 cuts power to 0W and starts accumulating energy & cost savings instantly.</li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Side: Telemetry, AI Engine & Savings -->
+                    <div class="main-dashboard">
+                        
+                        <!-- Power Telemetry Gauge Dial -->
+                        <div class="glass-card telemetry-card" id="telemetryCard">
+                            <div class="dial-container">
+                                <!-- Circular Gauge Ring -->
+                                <svg class="dial-svg" viewBox="0 0 240 240">
+                                    <circle class="dial-track" cx="120" cy="120" r="110" />
+                                    <circle class="dial-progress" id="dialProgress" cx="120" cy="120" r="110" />
+                                </svg>
+                                
+                                <div class="dial-content">
+                                    <div class="live-watts-val" id="wattsVal">1500</div>
+                                    <div class="live-watts-unit">Watts</div>
+                                    <span class="live-status-badge badge-active" id="statusBadge">Active</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--color-text-light); margin-top: 1.25rem;" id="deviceDesc">
+                                Typical room heater with an electronic timer/display.
+                            </div>
+                        </div>
+
+                        <!-- AI Classifier Diagnostics -->
+                        <div class="glass-card ai-classifier-card">
+                            <h3 class="section-title">
+                                <span>ZER0 Edge AI Engine</span>
+                                <span style="font-size: 0.72rem; font-family: var(--font-body); font-style: normal; color: var(--color-secondary); font-weight: bold; background: rgba(45, 106, 107, 0.08); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(45, 106, 107, 0.15);">CLASSIFIER: RUNNING</span>
+                            </h3>
+                            
+                            <div class="classifier-flow">
+                                <div class="flow-step">
+                                    <span class="flow-step-num">1</span>
+                                    <span class="flow-step-label">Current sampled:</span>
+                                    <span class="flow-step-value" id="aiValPower">1500.2W</span>
+                                </div>
+                                <div class="flow-step">
+                                    <span class="flow-step-num">2</span>
+                                    <span class="flow-step-label">Device Signature:</span>
+                                    <span class="flow-step-value" id="aiValSig">Electric Heater Profile</span>
+                                </div>
+                                <div class="flow-step">
+                                    <span class="flow-step-num">3</span>
+                                    <span class="flow-step-label">Active Threshold:</span>
+                                    <span class="flow-step-value" id="aiValThresh">> 50.0 W</span>
+                                </div>
+                                <div class="flow-step">
+                                    <span class="flow-step-num">4</span>
+                                    <span class="flow-step-label">Relay Controller:</span>
+                                    <span class="flow-step-value" id="aiValRelay" style="color: var(--color-secondary); font-weight: bold;">CLOSED (Power flowing)</span>
+                                </div>
+                            </div>
+
+                            <div class="classifier-banner">
+                                <div class="classifier-banner-title">
+                                    <i data-lucide="cpu" style="width: 14px; height: 14px;"></i> Rule Classification Engine
+                                </div>
+                                <div class="classifier-banner-desc" id="aiClassificationDesc">
+                                    Comparing sampled live active power (W) against localized device profiles. Triggers a relay warning if power draw exceeds expected off-state limits.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Savings and Himalayan Impact Tracker -->
+                        <div class="glass-card full-width-card">
+                            <h3 class="section-title">
+                                <span>Himalayan Hostels - Impact Tracker</span>
+                            </h3>
+                            
+                            <div class="metric-row">
+                                <!-- Inverter Life Card -->
+                                <div class="metric-card inverter-special">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Inverter Life Extended</span>
+                                        <i data-lucide="battery-charging" class="metric-icon"></i>
+                                    </div>
+                                    <div>
+                                        <div class="metric-value"><span id="metricInverterGained">0.0</span><span class="metric-value-unit">mins</span></div>
+                                        <div class="metric-subtext">Total backup time added to the hostel room.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Current Backup Remaining -->
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Est. Inverter Remaining</span>
+                                        <i data-lucide="zap" class="metric-icon"></i>
+                                    </div>
+                                    <div>
+                                        <div class="metric-value"><span id="metricInverterRemaining">0.0</span><span class="metric-value-unit">mins</span></div>
+                                        <div class="metric-subtext">Current backup at load: <span class="metric-highlight" id="metricTotalLoad">230W</span> (Base 80W)</div>
+                                    </div>
+                                </div>
+
+                                <!-- Energy Saved -->
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Energy Saved (Cumulative)</span>
+                                        <i data-lucide="activity" class="metric-icon"></i>
+                                    </div>
+                                    <div>
+                                        <div class="metric-value"><span id="metricEnergySaved">0.000</span><span class="metric-value-unit">Wh</span></div>
+                                        <div class="metric-subtext">Total wasted energy prevented.</div>
+                                    </div>
+                                </div>
+
+                                <!-- Cost Saved -->
+                                <div class="metric-card">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Money Saved</span>
+                                        <i data-lucide="indian-rupee" class="metric-icon" style="color: var(--color-primary);"></i>
+                                    </div>
+                                    <div>
+                                        <div class="metric-value"><span id="metricCostSaved">0.000</span></div>
+                                        <div class="metric-subtext">Calculated at Sikkim residential rate: ₹5.50/kWh.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Power Telemetry Chart -->
+                        <div class="glass-card full-width-card">
+                            <h3 class="section-title">Live Telemetry Timeline (Active Power Flow)</h3>
+                            <div class="chart-container">
+                                <canvas id="telemetryChart"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+        <!-- ===== MINIMALIST ZEN PLANT SCREEN ===== -->
+        <section id="plant-screen" style="display: none; opacity: 0; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; padding: 2rem 1rem; z-index: 10; flex: 1;">
+            <!-- Back button -->
+            <button class="btn btn-outline" style="position: absolute; top: 1.5rem; left: 1.5rem; width: auto; padding: 0.5rem 1.25rem; border-radius: 60px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; height: 36px;" onclick="closePlantScreen()">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Back to App
+            </button>
+            
+            <div class="zen-plant-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem;">
+                <div class="plant-zen-pot" style="position: relative; width: 240px; height: 240px; display: flex; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.45); border: var(--border-warm); border-radius: 50%; box-shadow: var(--shadow-soft); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); margin-bottom: 1.5rem;">
+                    <svg class="zen-plant-svg" viewBox="0 0 100 120" style="width: 160px; height: 200px;">
+                        <!-- Pot -->
+                        <path d="M35 100 L65 100 L70 118 L30 118 Z" fill="var(--color-primary-dark)" opacity="0.9" />
+                        <ellipse cx="50" cy="100" rx="17" ry="4" fill="#5c4033" />
+                        
+                        <!-- Stem -->
+                        <path id="zen-plant-stem" d="M50 100 Q50 90 50 85" stroke="#5a9e9f" stroke-width="4.5" fill="none" stroke-linecap="round" />
+                        
+                        <!-- Leaves -->
+                        <path id="zen-plant-leaf-left" d="M50 80 Q32 68 27 74 Q39 86 50 80" fill="#2d6a6b" style="display: none;" />
+                        <path id="zen-plant-leaf-right" d="M50 68 Q68 56 73 62 Q60 74 50 68" fill="#2d6a6b" style="display: none;" />
+                        
+                        <!-- Flower -->
+                        <g id="zen-plant-flower" style="display: none;">
+                            <circle cx="50" cy="50" r="10" fill="var(--color-primary)" />
+                            <circle cx="50" cy="34" r="6" fill="var(--color-accent)" />
+                            <circle cx="50" cy="66" r="6" fill="var(--color-accent)" />
+                            <circle cx="34" cy="50" r="6" fill="var(--color-accent)" />
+                            <circle cx="66" cy="50" r="6" fill="var(--color-accent)" />
+                        </g>
+                    </svg>
+                    
+                    <!-- Energy Particles -->
+                    <div class="zen-energy-particles" id="zenEnergyParticles" style="position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden;">
+                        <!-- particles generated dynamically -->
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.55rem; align-items: center; justify-content: center; margin-top: 0.5rem;">
+                    <h2 class="zen-plant-title" id="zenPlantTitle" style="font-family: var(--font-display); font-size: 2.2rem; font-style: italic; color: var(--color-text); margin-bottom: 0;">The Living Sprout</h2>
+                    <span class="plant-badge" id="zenPlantStatusBadge">Dormant</span>
+                </div>
+                <p class="zen-plant-status" id="zenPlantStatus" style="font-size: 0.95rem; color: var(--color-text-light); margin-top: 0.5rem; max-width: 450px; line-height: 1.5; font-weight: 300;">
+                    Dormant — Feed me saved phantom energy to help me grow! (Active when relay is PATCHED)
+                </p>
+                
+                <!-- Growth counter display -->
+                <div class="zen-progress-container" style="margin-top: 1.8rem; width: 280px; margin-left: auto; margin-right: auto;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: var(--color-text-light); margin-bottom: 0.4rem;">
+                        <span>Growth Progress</span>
+                        <span id="zenGrowthLabel">0%</span>
+                    </div>
+                    <div class="progress-track" style="height: 8px; background: rgba(44, 38, 32, 0.08); border-radius: 6px; overflow: hidden; position: relative;">
+                        <div class="progress-fill" id="zenGrowthFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)); border-radius: 6px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+            <footer>
+                <div>Developed for SMIT Hackathon 2026</div>
+                <div class="team-badge" style="margin-bottom: 0.25rem;">Team 6: ZER0</div>
+                <div style="margin-top: 0.35rem; display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                    <a href="https://github.com/sourishnandy4-cell/zer0" target="_blank" style="color: var(--color-primary); text-decoration: none; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; transition: opacity 0.2s ease;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+                        <i data-lucide="github" style="width: 14px; height: 14px;"></i> GitHub
+                    </a>
+                    <span style="color: var(--color-text-muted); font-size: 0.75rem;">|</span>
+                    <a href="https://zero-smit-2026.surge.sh" target="_blank" style="color: var(--color-secondary); text-decoration: none; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; transition: opacity 0.2s ease;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+                        <i data-lucide="external-link" style="width: 14px; height: 14px;"></i> Live App
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        <!-- /app-container -->
+
+    <!-- ============================================================
+    OPTIONS SIDE DRAWER (Features Panels)
+    ============================================================ -->
+    <div id="options-drawer" class="drawer-panel">
+        <div class="drawer-header">
+            <h3>zerO Concepts</h3>
+            <button class="drawer-close-btn" onclick="toggleDrawer()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="drawer-content">
+            <!-- Interactive living interface button card -->
+            <div class="feature-card interactive-feature" onclick="showPlantScreen()" style="cursor: pointer; border-color: rgba(45, 106, 107, 0.15);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div class="icon" style="margin-bottom: 0;">🌱</div>
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--color-text); margin-bottom: 0;">Living interface</h3>
+                    </div>
+                    <i data-lucide="chevron-right" style="width: 18px; height: 18px; color: var(--color-text-muted);"></i>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--color-text-light); margin-top: 0.5rem; line-height: 1.45;">
+                    Enter a minimalist zen space to watch your plant grow and bloom by consuming reclaimed phantom load energy.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🤝</div>
+                <h3>Human connection</h3>
+                <p>Built around how people actually think and feel, not cold dashboards or sterile metrics.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">✨</div>
+                <h3>Energy as experience</h3>
+                <p>See, feel, and understand your energy footprint through beautiful, intuitive visualizations.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔄</div>
+                <h3>Zero complexity</h3>
+                <p>Simple, transparent, and honest. No jargon, no friction — just pure, human-centered design.</p>
+            </div>
+        </div>
+    </div>
+    <div id="drawer-overlay" class="drawer-overlay-bg" onclick="toggleDrawer()"></div>
+
+    <!-- ============================================================
+    WATCH STORY MODAL
+    ============================================================ -->
+    <div id="story-modal" class="modal-wrapper">
+        <div class="modal-content glass-card">
+            <button class="modal-close-btn" onclick="closeStoryModal()"><i data-lucide="x"></i></button>
+            
+            <div class="story-container">
+                <h2 class="story-title">How zerO Saves Your Battery</h2>
+                
+                <!-- Slide Viewport -->
+                <div class="story-slides">
+                    <!-- Slide 1 -->
+                    <div class="story-slide active-slide" id="slide-1">
+                        <div class="story-visual-container">
+                            <div class="vampire-leak-graphic">
+                                <div class="device-box leak-pulsing"><i data-lucide="tv"></i> Projector</div>
+                                <div class="leak-flow-line">
+                                    <span class="leak-particle"></span>
+                                    <span class="leak-particle"></span>
+                                    <span class="leak-particle"></span>
+                                </div>
+                                <div class="battery-box draining"><i data-lucide="battery-warning"></i> Inverter Draining</div>
+                            </div>
+                        </div>
+                        <div class="story-text-info">
+                            <h3>1. Detect Phantom Leak</h3>
+                            <p>Hostel appliances are switched 'off', but their power converters continue drawing 10W-50W. ZER0's Edge AI classifier samples signature harmonics and immediately flags it as a leak.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 2 -->
+                    <div class="story-slide" id="slide-2">
+                        <div class="story-visual-container">
+                            <div class="relay-trip-graphic">
+                                <div class="device-box"><i data-lucide="tv"></i> Isolated</div>
+                                <div class="relay-switch open">
+                                    <span class="contact-arm"></span>
+                                </div>
+                                <div class="battery-box idle"><i data-lucide="battery"></i> Safe</div>
+                            </div>
+                        </div>
+                        <div class="story-text-info">
+                            <h3>2. Cut Vampire Power</h3>
+                            <p>Upon detection, ZER0 triggers the physical smart relay in the outlet to open, dropping energy flow to absolute zero (0.0W). Vampire power is cut at the root.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 3 -->
+                    <div class="story-slide" id="slide-3">
+                        <div class="story-visual-container">
+                            <div class="battery-gain-graphic">
+                                <div class="clock-icon-glow"><i data-lucide="clock"></i></div>
+                                <div class="battery-fill-charge">
+                                    <div class="battery-fill-level"></div>
+                                </div>
+                                <div class="time-gained-counter">+324 Mins</div>
+                            </div>
+                        </div>
+                        <div class="story-text-info">
+                            <h3>3. Extend Inverter Backup</h3>
+                            <p>Reclaiming that energy adds up to 5+ hours of back-up time during Sikkim winter hostel load-shedding, keeping router and bulb running longer.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slide Dots & Controls -->
+                <div class="story-controls">
+                    <button class="btn btn-outline" style="width: auto; padding: 0.5rem 1rem;" onclick="prevStorySlide()"><i data-lucide="chevron-left"></i> Prev</button>
+                    <div class="slide-dots">
+                        <span class="slide-dot active-dot" onclick="gotoStorySlide(1)"></span>
+                        <span class="slide-dot" onclick="gotoStorySlide(2)"></span>
+                        <span class="slide-dot" onclick="gotoStorySlide(3)"></span>
+                    </div>
+                    <button class="btn btn-cyan" style="width: auto; padding: 0.5rem 1rem;" onclick="nextStorySlide()">Next <i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-overlay" class="modal-overlay-bg" onclick="closeStoryModal()"></div>
+
+    <!-- Lucide Icons Library for elegant UI graphics -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Script Logic -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

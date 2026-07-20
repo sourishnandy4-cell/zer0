@@ -5,7 +5,7 @@ A minimalist, human-centered smart home energy dashboard designed to eliminate s
 ---
 
 ## 🔗 Live Application Link
-🚀 **[Explore zerO Live Webapp](https://zero-smit-hackathon-2026.surge.sh)** — Hosted on Surge.sh, no login required!
+🚀 **[Explore zerO Live Webapp](https://sourishnandy4-cell.github.io/zer0/)** — Hosted on GitHub Pages, no login required!
 
 ---
 
