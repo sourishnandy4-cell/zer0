@@ -6,6 +6,10 @@
     <title>zerO — Energy Reimagined</title>
     <!-- CSS Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Instrument Serif for hero typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
     <!-- Webapp Icon / Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}" />
     <!-- Chart.js for real-time telemetry plotting -->
@@ -83,6 +87,20 @@
 
             <!-- ===== HOME LANDING SCREEN SECTION ===== -->
             <section id="home-screen" style="display: block;">
+
+                <!-- Video Hero Background -->
+                <div class="hero-video-wrapper" aria-hidden="true">
+                    <video
+                        id="heroVideo"
+                        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_083109_283f3553-e28f-428b-a723-d639c617eb2b.mp4"
+                        muted
+                        playsinline
+                        preload="auto"
+                    ></video>
+                    <div class="hero-gradient-overlay"></div>
+                </div>
+
+                <!-- Hero Content -->
                 <div class="hero">
                     <div class="hero-text">
                         <div class="hero-badge">
@@ -358,20 +376,23 @@
                         <path d="M35 100 L65 100 L70 118 L30 118 Z" fill="var(--color-primary-dark)" opacity="0.9" />
                         <ellipse cx="50" cy="100" rx="17" ry="4" fill="#5c4033" />
                         
-                        <!-- Stem -->
-                        <path id="zen-plant-stem" d="M50 100 Q50 90 50 85" stroke="#5a9e9f" stroke-width="4.5" fill="none" stroke-linecap="round" />
-                        
-                        <!-- Leaves -->
-                        <path id="zen-plant-leaf-left" d="M50 80 Q32 68 27 74 Q39 86 50 80" fill="#2d6a6b" style="display: none;" />
-                        <path id="zen-plant-leaf-right" d="M50 68 Q68 56 73 62 Q60 74 50 68" fill="#2d6a6b" style="display: none;" />
-                        
-                        <!-- Flower -->
-                        <g id="zen-plant-flower" style="display: none;">
-                            <circle cx="50" cy="50" r="10" fill="var(--color-primary)" />
-                            <circle cx="50" cy="34" r="6" fill="var(--color-accent)" />
-                            <circle cx="50" cy="66" r="6" fill="var(--color-accent)" />
-                            <circle cx="34" cy="50" r="6" fill="var(--color-accent)" />
-                            <circle cx="66" cy="50" r="6" fill="var(--color-accent)" />
+                        <!-- Swaying Plant Group -->
+                        <g id="zen-plant-group" style="transform-origin: 50px 100px;">
+                            <!-- Stem -->
+                            <path id="zen-plant-stem" d="M50 100 Q50 90 50 85" stroke="#5a9e9f" stroke-width="4.5" fill="none" stroke-linecap="round" />
+                            
+                            <!-- Leaves -->
+                            <path id="zen-plant-leaf-left" d="M50 80 Q32 68 27 74 Q39 86 50 80" fill="#2d6a6b" style="display: none; transform-origin: 50px 80px;" />
+                            <path id="zen-plant-leaf-right" d="M50 68 Q68 56 73 62 Q60 74 50 68" fill="#2d6a6b" style="display: none; transform-origin: 50px 68px;" />
+                            
+                            <!-- Flower -->
+                            <g id="zen-plant-flower" style="display: none; transform-origin: 50px 50px;">
+                                <circle class="flower-petal" cx="50" cy="34" r="6" fill="var(--color-accent)" />
+                                <circle class="flower-petal" cx="50" cy="66" r="6" fill="var(--color-accent)" />
+                                <circle class="flower-petal" cx="34" cy="50" r="6" fill="var(--color-accent)" />
+                                <circle class="flower-petal" cx="66" cy="50" r="6" fill="var(--color-accent)" />
+                                <circle class="flower-core" cx="50" cy="50" r="10" fill="var(--color-primary)" />
+                            </g>
                         </g>
                     </svg>
                     
@@ -545,5 +566,88 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Script Logic -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <!-- Hero Video Controller -->
+    <script>
+    (function() {
+        const video = document.getElementById('heroVideo');
+        const wrapper = document.querySelector('.hero-video-wrapper');
+        if (!video || !wrapper) return;
+
+        let rafId = null;
+
+        function checkFade() {
+            if (video.duration) {
+                const cur = video.currentTime;
+                const dur = video.duration;
+                let opacity = 1;
+
+                if (cur < 0.5) {
+                    // Fade in over 0.5s at the start
+                    opacity = cur / 0.5;
+                } else if (dur - cur < 0.5) {
+                    // Fade out over 0.5s before the end
+                    opacity = Math.max(0, (dur - cur) / 0.5);
+                }
+
+                video.style.opacity = opacity.toString();
+            }
+            rafId = requestAnimationFrame(checkFade);
+        }
+
+        // On ended event: set opacity to 0, wait 100ms, reset currentTime = 0, then play() again
+        video.addEventListener('ended', () => {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+            video.style.opacity = '0';
+            setTimeout(() => {
+                video.currentTime = 0;
+                video.play().then(() => {
+                    if (!rafId) {
+                        rafId = requestAnimationFrame(checkFade);
+                    }
+                }).catch(err => {
+                    console.error("Video loop play failed:", err);
+                });
+            }, 100);
+        });
+
+        // Start requestAnimationFrame when video plays
+        video.addEventListener('play', () => {
+            if (!rafId) {
+                rafId = requestAnimationFrame(checkFade);
+            }
+        });
+
+        // Stop requestAnimationFrame when video is paused
+        video.addEventListener('pause', () => {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+        });
+
+        // Play when ready
+        video.addEventListener('loadeddata', () => video.play().catch(() => {}));
+        video.addEventListener('canplay',    () => video.play().catch(() => {}));
+
+        // Hide wrapper when on dashboard screen
+        const homeScreen = document.getElementById('home-screen');
+        const obs = new MutationObserver(() => {
+            const onHome = homeScreen && homeScreen.style.display !== 'none';
+            wrapper.style.display = onHome ? 'block' : 'none';
+            if (onHome) {
+                video.play().catch(() => {});
+            } else {
+                video.pause();
+            }
+        });
+        if (homeScreen) obs.observe(homeScreen, { attributes: true, attributeFilter: ['style'] });
+
+        // Start immediately
+        video.play().catch(() => {});
+    })();
+    </script>
 </body>
 </html>

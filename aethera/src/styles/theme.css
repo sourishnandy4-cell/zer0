@@ -1,0 +1,16 @@
+@theme {
+  --animate-fade-rise: fade-rise 0.8s ease-out forwards;
+  --animate-fade-rise-delay: fade-rise 0.8s ease-out 0.2s both;
+  --animate-fade-rise-delay-2: fade-rise 0.8s ease-out 0.4s both;
+
+  @keyframes fade-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

@@ -1114,8 +1114,21 @@ function spawnZenParticle() {
     particle.className = 'zen-particle';
     particle.style.left = (Math.random() * 80 + 10) + '%';
     
-    const duration = (Math.random() * 0.4 + 1.6); // 1.6 to 2.0s
+    const duration = (Math.random() * 0.6 + 1.4); // 1.4 to 2.0s
     particle.style.animationDuration = duration + 's';
+    
+    // ZER0 Brand Colors Palette
+    const colors = ['#e8a87c', '#5a9e9f', '#f5c542', '#d46a3a'];
+    const randColor = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.background = randColor;
+    
+    // Varying sizes
+    const size = Math.floor(Math.random() * 5) + 5; // 5px to 9px
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    
+    // Outer glow matches randomized color
+    particle.style.boxShadow = `0 0 10px ${randColor}, 0 0 4px ${randColor}`;
     
     container.appendChild(particle);
     
