@@ -42,21 +42,13 @@
     font-family: var(--font-body);
 }
 
-html {
-    background-color: var(--color-bg);
-}
-
 body {
-    background-color: transparent;
+    background-color: var(--color-bg);
     color: var(--color-text);
     min-height: 100vh;
     overflow-x: hidden;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-}
-
-#main-content {
-    background: transparent;
 }
 
 /* Custom Scrollbars */
